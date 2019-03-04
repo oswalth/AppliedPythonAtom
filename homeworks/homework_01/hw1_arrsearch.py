@@ -13,4 +13,11 @@ def find_indices(input_list, n):
     :param n: целевая сумма
     :return: tuple из двух индексов или None
     '''
+    import copy
+    for i in range(len(input_list)):
+        tmp_list = copy.deepcopy(input_list)
+        del tmp_list[i]
+        if abs(n - input_list[i]) in tmp_list:
+            return (input_list.index(input_list[i]), input_list.index(
+                abs(n - input_list[i])))
     raise NotImplementedError

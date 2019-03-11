@@ -19,6 +19,7 @@ class VKPoster:
         :param post_id: id поста. Число.
         :return: ничего
         '''
+        print('s')
         pass
 
     def user_read_post(self, user_id: int, post_id: int):

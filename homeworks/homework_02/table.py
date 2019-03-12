@@ -1,45 +1,59 @@
 import sys
+from checking import get_enc, get_format
 from tab_process import find_max, from_json
 from print_table import output, output_h
 # Ваши импорты
 
 
 def get_data(filename):
+    try:
+        with open(filename) as f_obj:
+            pass
+    except FileNotFoundError:
+        print("Файл не валиден")
+        return None
     if filename:
-        codes = ['utf8', 'utf16', 'cp1251']
-        for enc in codes:
-            try:
-                try:
-                    with open(filename, encoding=enc) as f_obj:
-                        data = from_json(f_obj)
-                    if data == 'Формат не валиден':
-                        with open(filename, encoding=enc) as f_obj:
-                            data = [line.strip().split('\t') for line in f_obj]
-                            break
-                    else:
-                        break
-                except FileNotFoundError:
-                    return "Файл не валиден"
-            except UnicodeError:
-                pass
+        enc = get_enc(filename)
+        if not enc:
+            print("Формат не валиден")
+            return None
+        format = get_format(filename, enc)
+        if not format:
+            print("Формат не валиден")
+            return None
+        with open(filename, encoding=enc) as f_obj:
+            data = f_obj.read()
+            if format == 'json':
+                data = from_json(f_obj)
+            elif format == 'tsv':
+                data = data.strip().split('\n')
+                data = [line.split('\t') for line in data]
+                # data = [line.strip().split('\t') for line in f_obj]
         width, col_numb = find_max(data)
         if not width:
-            return "Формат не валиден"
+            print("Формат не валиден")
+            return None
         header = 1
-        print('-' * (sum(width) + 5 * col_numb + 1), end='\n')
+        print('-' * (sum(width) + 5 * col_numb + 1))
         for row in data:
             if header:
-                print(output_h(row, width), end='')
+                (output_h(row, width))
             else:
-                print(output(row, width), end='')
+                (output(row, width))
             header = 0
         print('-' * (sum(width) + 5 * col_numb + 1))
     else:
-        return "Файл не валиден"
+        print("Файл не валиден")
+        return None
+
 
 if __name__ == '__main__':
-    filename =  sys.argv[1] # "D:/atom/AppliedPythonAtom/homeworks/homework_02/files/posts-utf8.tsv"
+    """
+    if len(sys.argv) < 2:
+        print("Файл не валиден")
+        raise SystemExit
+    """
+    filename = "D:/atom/AppliedPythonAtom/homeworks/homework_02/files/posts-utf8.tsv"
+    # filename = sys.argv[1]
     # filename = "D:/atom/AppliedPythonAtom/output.txt"
-    answer = get_data(filename)
-    if answer:
-        print(answer)
+    get_data(filename)

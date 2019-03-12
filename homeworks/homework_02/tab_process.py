@@ -7,7 +7,7 @@ def find_max(data):
     try:
         col_numb = len(data[0])
         for i in range(col_numb):
-            columns.insert(0,  [])
+            columns.insert(0, [])
         for row in data:
             for i in range(col_numb):
                 columns[i].append(row[i])
@@ -16,14 +16,17 @@ def find_max(data):
     maxs = [len(max(columns[i], key=len)) for i in range(col_numb)]
     return maxs, col_numb
 
+
 def from_json(f_obj):
     data = []
     try:
         json_list = json.load(f_obj, object_pairs_hook=OrderedDict)
     except ValueError:
-        return "Формат не валиден"
+        print("Формат не валиден")
+        return None
     except UnicodeDecodeError:
-        return "Формат не валиден"
+        print("Формат не валиден")
+        return None
     for el in json_list:
         entity = []
         for k, v in el.items():

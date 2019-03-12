@@ -34,6 +34,9 @@ def get_data(filename):
             print("Формат не валиден")
             return None
         header = 1
+        if any(len(row) != len(data[0]) for row in data):
+            print("Формат не валиден")
+            return None
         print('-' * (sum(width) + 5 * col_numb + 1))
         for row in data:
             if len(row) == 0 or len(row) != len(width):

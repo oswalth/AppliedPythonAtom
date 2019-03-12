@@ -10,6 +10,8 @@ def output_h(row, width):
 
 def output(row, width):
     for i in range(len(row)):
+        a = row[i]
+        b = width[i]
         output_row = "|  {:" + (">" if i == len(row) - 1 else "<") + "{w}}  "
-        print(output_row.format(row[i], w=width[i]), end='')
+        print(output_row.format(a, w=b), end='')
     print("|")

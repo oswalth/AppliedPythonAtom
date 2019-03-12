@@ -41,19 +41,15 @@ def get_data(filename):
             else:
                 (output(row, width))
             header = 0
-        print('-' * (sum(width) + 5 * col_numb + 1))
+        print('-' * (sum(width) + 5 * col_numb + 1), end="")
     else:
         print("Файл не валиден")
         return None
 
 
 if __name__ == '__main__':
-    """
     if len(sys.argv) < 2:
         print("Файл не валиден")
         raise SystemExit
-    """
-    filename = "D:/atom/AppliedPythonAtom/homeworks/homework_02/files/posts-utf8.tsv"
-    # filename = sys.argv[1]
-    # filename = "D:/atom/AppliedPythonAtom/output.txt"
+    filename = sys.argv[1]
     get_data(filename)

@@ -22,10 +22,10 @@ def get_data(filename):
             print("Формат не валиден")
             return None
         with open(filename, encoding=enc) as f_obj:
-            data = f_obj.read()
             if format == 'json':
                 data = from_json(f_obj)
             elif format == 'tsv':
+                data = f_obj.read()
                 data = data.strip().split('\n')
                 data = [line.split('\t') for line in data]
                 # data = [line.strip().split('\t') for line in f_obj]

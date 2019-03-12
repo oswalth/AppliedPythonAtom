@@ -36,6 +36,8 @@ def get_data(filename):
         header = 1
         print('-' * (sum(width) + 5 * col_numb + 1))
         for row in data:
+            if len(row) == 0:
+                raise ValueError("Формат не валиден")
             if header:
                 (output_h(row, width))
             else:

@@ -8,8 +8,8 @@
 class User:
 
     def __init__(self, user_id):
-            self.reading = []
-            self.posted_posts = []
+        self.reading = []
+        self.posted_posts = []
 
 
 class Post:
@@ -23,11 +23,11 @@ class VKPoster:
     def __init__(self):
         self.users = {}
         self.posts = {}
-    
+
     def is_user(self, user_id):
         if user_id not in self.users:
             self.users[user_id] = User(user_id)
-    
+
     def is_post(self, post_id):
         if post_id not in self.posts:
             self.posts[post_id] = Post(post_id)
@@ -69,7 +69,7 @@ class VKPoster:
         self.is_user(followee_user_id)
         self.users[follower_user_id].reading.append(followee_user_id)
 
-    def get_recent_posts(self, user_id: int, k: int)-> list:
+    def get_recent_posts(self, user_id: int, k: int) -> list:
         '''
         Метод который вызывается когда пользователь user_id
         запрашивает k свежих постов людей на которых он подписан.
@@ -93,6 +93,10 @@ class VKPoster:
         :return: Список из post_id размером К из популярных постов. list
         '''
         posts = sorted(self.posts, reverse=True)
-        last_populars = sorted(posts, key=lambda post_id: len(self.posts[post_id].views),
-                               reverse=True)[:k]
+        last_populars = sorted(
+            posts,
+            key=lambda post_id: len(
+                self.posts[post_id].views),
+            reverse=True)[
+            :k]
         return last_populars

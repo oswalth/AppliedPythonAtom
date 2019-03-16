@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+from itertools import permutations
 
 
 def groupping_anagramms(words):
@@ -23,4 +24,21 @@ def groupping_anagramms(words):
     :return: list of lists of words
     """
     # TODO: реализовать функцию
-    raise NotImplementedError
+    words = words[:]
+    output = []
+    for word in words:
+        f = True
+        for o in output:
+            if word in o:
+                f = False
+                continue
+        if not f:
+            continue
+        perms = set([''.join(p) for p in permutations(word.lower())])
+        anagramms = []
+        for strr in words:
+            if strr.lower() in perms:
+                anagramms.append(strr)
+        output.append(anagramms)
+
+    return output

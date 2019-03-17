@@ -8,6 +8,7 @@ class Requester:
     Какой-то класс, который умеет делать запросы
      к удаленному серверу
     '''
+
     def get(self, host, port, filename):
         return "Fail"
 
@@ -19,6 +20,7 @@ class RemoteFileReader(Requester):
     '''
     Класс для работы с файлами на удаленном сервере
     '''
+
     def __init__(self, host, port):
         self._host = host
         self._port = port
@@ -35,6 +37,7 @@ class OrdinaryFileWorker(RemoteFileReader):
     Класс, который работает как с локальными
      так и с удаленными файлами
     '''
+
     def transfer_to_remote(self, filename):
         with open(filename, "r") as f:
             super().write_file(filename, f.readlines())
@@ -58,6 +61,7 @@ class MockOrdinaryFileWorker(OrdinaryFileWorker):
       при создании объекта, директория ./tmp должна создаваться
      если еще не создана
     '''
+
     def __init__(self):
         if not os.path.exists('./tmpf'):
             os.makedirs('./tmpf')
@@ -69,7 +73,7 @@ class MockOrdinaryFileWorker(OrdinaryFileWorker):
                 if os.path.isfile(file_path):
                     os.remove(file_path)
         os.rmdir("./tmpf")
-    
+
     def transfer_to_local(self, filename):
         with open("homeworks/homework_03/test_dir/" + filename + '.tmp') as f_obj:
             with open("./tmpf/" + filename, 'w') as f2_obj:
@@ -79,7 +83,7 @@ class MockOrdinaryFileWorker(OrdinaryFileWorker):
         with open('homeworks/homework_03/test_dir/' + filename, 'r') as f_obj:
             with open('./tmpf/' + filename + '.tmp', 'w') as f2_obj:
                 f2_obj.writelines(f_obj.read())
-        
+
 
 class LLNode:
     def __init__(self, value, next_node):

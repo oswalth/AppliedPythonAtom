@@ -3,6 +3,7 @@
 from collections import deque
 import time
 
+
 class LRUCacheDecorator:
 
     def __init__(self, maxsize, ttl):
@@ -18,26 +19,27 @@ class LRUCacheDecorator:
         self.cache = deque()
         self.time = time.time()
 
-    def put(self, element):
+    def _put(self, res, *args, **kwargs):
         if len(self.cache) == self.maxsize:
             self.cache.pop()
-        self.cache.appendleft(element)
+            self.cache.appendleft({'args': (args, kwargs), 'result': res})
+        else:
+            self.cache.appendleft({'args': (args, kwargs), 'result': res})
 
-    def reset(self):
-        if self.ttl and time.time() - self.time >= self.ttl:
-            self.cach = deque()
-        return None
+    def _reset(self):
+        if self.ttl and time.time() - self.time > self.ttl:
+            self.cache = deque()
 
     def __call__(self, func):
         def wrapped(*args, **kwargs):
-            self.reset()
+            self._reset()
             for element in self.cache:
                 if element['args'] == (args, kwargs):
                     self.cache.remove(element)
                     self.cache.appendleft(element)
                     return element['result']
             res = func(*args, **kwargs)
-            self.put({'args': (args, kwargs), 'result': res})
+            self._put(res, *args, *kwargs)
             return res
         self.time = time.time()
         return wrapped

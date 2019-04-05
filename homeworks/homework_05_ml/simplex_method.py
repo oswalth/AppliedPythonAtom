@@ -60,7 +60,7 @@ def simplex_method(a, b, c):
             if b[row_ind[0]] / x == row_min:
                 row_ind = row_ind[0]
                 break
-        el = A[row_ind][col_ind] # разрешающий элемент
+        el = A[row_ind][col_ind]  # разрешающий элемент
         recalcA = np.zeros_like(A, dtype=np.float32)
         recalcb = np.zeros_like(b, dtype=np.float32)
         for i in range(len(basis)):

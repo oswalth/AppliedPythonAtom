@@ -10,6 +10,7 @@ class CSRMatrix:
     CSR (2D) matrix.
     Here you can read how CSR sparse matrix works: https://en.wikipedia.org/wiki/Sparse_matrix
     """
+
     def __init__(self, init_matrix_representation):
         """
         :param init_matrix_representation: can be usual dense matrix
@@ -18,10 +19,11 @@ class CSRMatrix:
             where data, row_ind and col_ind satisfy the relationship:
             a[row_ind[k], col_ind[k]] = data[k]
         """
-        if isinstance(init_matrix_representation, tuple) and len(init_matrix_representation) == 3:
+        if isinstance(init_matrix_representation, tuple) and len(
+                init_matrix_representation) == 3:
             self._initialize_with_tuple(init_matrix_representation)
         elif isinstance(init_matrix_representation, np.ndarray):
-             self._initialize_with_matrix(init_matrix_representation)
+            self._initialize_with_matrix(init_matrix_representation)
         else:
             raise ValueError
 
@@ -38,7 +40,7 @@ class CSRMatrix:
             self.JA = np.append(self.JA, col)
         shape = sorted(zip(rows, cols, values))[-1][:2]
         self.shape = (shape[0] + 1, shape[1] + 1)
-    
+
     def _initialize_with_matrix(self, matrix):
         self.shape = matrix.shape
         self.A = matrix[matrix != 0]
@@ -86,7 +88,6 @@ class CSRMatrix:
                     self.JA = np.delete(self.JA, tmp, j)
                     self.A = np.delete(self.A, tmp, j)
                 tmp = ix
-            
 
     def to_dense(self):
         """

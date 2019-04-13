@@ -2,6 +2,10 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
+import scipy.sparse.linalg
+from sklearn import linear_model, datasets
+from sklearn.model_selection import train_test_split
+from metrics import mse
 
 
 class LinearRegression:
@@ -23,32 +27,35 @@ class LinearRegression:
         :return: None
         """
         self.X = (X_train - np.mean(X_train)) / np.std(X_train)
-        self.X_ext = np.vstack([np.ones(self.X.shape[0]), self.X])
-        self.X_ext = self.X_ext.T
+        self.X_ext = np.vstack([np.ones(self.X.shape[0]), self.X]).T
         self.Y = y_train
-        self.w = np.zeros(self.X_ext.shape[1])
+        self.n, self.k = self.X_ext.shape
+        self.w = np.random.randn(self.k) / np.sqrt(self.k)
         # в случае тестируемого примера ответы примерно -224 и 5.9 соотв
         # поэтому ставлю достаточно близкие к ним значения
-        self.w[0] = -200
-        self.w[1] = 4
+        # self.w[0] = -200
+        # self.w[1] = 4
 
         accuracy = 1e-5
-        err = 0.1
         iter_lim = 100
-        cnt = 0
-        while err > accuracy:
-            prev = np.copy(self.w)
-            self._gradient_descent()
-            err = np.sum(np.abs(self.w - prev))
-            cnt += 1
-        self.w.shape = (2, 1)
-        MSE = 1 / self.Y.shape[0] * np.sum((self.Y - self.predict(self.X)))
-        print(MSE, cnt)
+        errs = np.zeros(iter_lim)
+        for i in range(iter_lim):
+            if self.regulatization == 'L1':
+                fine = self.alpha * np.ones(self.k) / 2
+            elif self.regulatization == "L2":
+                fine = self.alpha * self.w
+            else: 
+                fine = 0
+            self._gradient_descent(fine)
+            errs[i] = mse(self.Y, self.predict(X_train))
+            if i and np.abs(errs[i] - errs[i - 1]) < accuracy:
+                break
+        print(errs[i], i)
 
-    def _gradient_descent(self):
+    def _gradient_descent(self, fine):
         step = 0.01
         Y_predicted = self.predict(self.X)
-        self.w -= step * (-2 / self.X.shape[0]) * self.X_ext.T.dot((self.Y - Y_predicted))
+        self.w -= step * (2 / self.n) * (self.X_ext.T.dot((Y_predicted - self.Y)) + fine)
     
     def predict(self, X_test):
         """
@@ -68,15 +75,38 @@ class LinearRegression:
         :return: weights array
         """
         return self.w
-        
 
 
 
-df = pd.read_csv('~/atom/AppliedPythonAtom/homeworks/homework_06_ml/weight-height.csv')
+df = pd.read_csv('D:/atom/AppliedPythonAtom/homeworks/homework_06_ml/weight-height.csv')
 wh_dataset = df.loc[df.Gender=='Male', ['Height', 'Weight']].values
+diabetes = datasets.load_diabetes()
 X = wh_dataset[:, 0]
 y = wh_dataset[:, 1]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 model = LinearRegression()
-model.fit(X, y)
-model.get_weights()
-print(model.predict(X))
+model.fit(X_train, y_train)
+print(model.get_weights())
+
+y_predicted = model.predict(X_test)
+MSE1 = mse(y_test, y_predicted)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=41)
+y_predicted = model.predict(X_test)
+MSE2 = mse(y_test, y_predicted)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=43)
+y_predicted = model.predict(X_test)
+MSE3 = mse(y_test, y_predicted)
+"""
+X1 = X_train.reshape(-1, 1)
+y1 = y_train.reshape(-1, 1)
+my_regr = linear_model.LinearRegression()
+my_regr.fit(X1, y1)
+y_pred2 = my_regr.predict(X_test.reshape(-1, 1))
+MSEe = mse(y_test, y_pred2)
+print(my_regr.intercept_, my_regr.coef_)
+"""
+
+
+

@@ -11,8 +11,10 @@ def mse(y_true, y_hat, derivative=False):
     :param y_hat: vector of estimated target values
     :return: loss
     """
-    n = y_true.shape[0]
-    return 1 / n * np.sum((y_true - y_hat) ** 2)
+    assert y_true.shape == y_hat.shape
+    if derivative:
+        return 2 * np.sum(y_true - y_hat) / len(y_true)
+    return np.average((y_true - y_hat) ** 2)
 
 
 def mae(y_true, y_hat):
@@ -22,8 +24,8 @@ def mae(y_true, y_hat):
     :param y_hat: vector of estimated target values
     :return: loss
     """
-    n = y.shape[0]
-    return 1 / n * np.sum(np.abs(y_true - y_hat))
+    assert y_true.shape == y_hat.shape
+    return np.average(np.abs(y_true - y_hat))
 
 
 def r2_score(y_true, y_hat):
@@ -33,6 +35,7 @@ def r2_score(y_true, y_hat):
     :param y_hat: vector of estimated target values
     :return: loss
     """
-    RSS = (np.sum(y_true - y_hat) ** 2)
-    TSS = (np.sum(y_true - np.average(y_true)))
-    return 1 - RSS / TSS
+    assert y_true.shape == y_hat.shape
+    ESS = np.sum((y_hat - y_true.mean()) ** 2)
+    TSS = np.sum((y_true - y_true.mean()) ** 2)
+    return (ESS / TSS)

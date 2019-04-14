@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # coding: utf-8
 import numpy as np
-import pandas as pd
-import scipy.sparse.linalg
-from sklearn import linear_model, datasets
-from sklearn.model_selection import train_test_split
-from metrics import mse
-from sklearn.datasets import make_regression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
+from metrics import mse, mae, r2_score
 
 
 class LinearRegression:
-    def __init__(self, lambda_coef=0.01, regulatization=None, alpha=0.5, accuracy=1e-7,
-        iter_lim=100000):
+    def __init__(
+            self,
+            lambda_coef=0.05,
+            regulatization=None,
+            alpha=0.5,
+            accuracy=1e-9,
+            iter_lim=100000):
         """
         :param lambda_coef: constant coef for gradient descent step
         :param regulatization: regularizarion type ("L1" or "L2") or None
@@ -22,8 +22,8 @@ class LinearRegression:
         self.lambda_coef = lambda_coef
         self.regulatization = regulatization
         self.alpha = alpha
-        self.accuracy = 1e-7
-        self.iter_lim = 100000
+        self.accuracy = accuracy
+        self.iter_lim = iter_lim
 
     def fit(self, X_train, y_train):
         """
@@ -49,7 +49,7 @@ class LinearRegression:
             else:
                 fine = 0
             self._gradient_descent(fine)
-            errs[i] = mse(self.Y, self.predict(X_train))
+            errs[i] = mean_squared_error(self.Y, self.predict(X_train))
             err = np.abs(errs[i] - errs[i - 1])
             if i and err < self.accuracy:
                 break

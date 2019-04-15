@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 import numpy as np
+from sklearn import datasets
+from sklearn.datasets import make_regression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from metrics import mse, mae, r2_score
@@ -9,7 +11,7 @@ from metrics import mse, mae, r2_score
 class LinearRegression:
     def __init__(
             self,
-            lambda_coef=0.05,
+            lambda_coef=0.001,
             regulatization=None,
             alpha=0.5,
             accuracy=1e-9,
@@ -43,9 +45,11 @@ class LinearRegression:
         errs = np.zeros(self.iter_lim)
         for i in range(self.iter_lim):
             if self.regulatization == 'L1':
-                fine = self.alpha * np.ones((self.k, 1)) / 2
+                fine = self.alpha * np.ones(self.k - 1)
+                fine = np.insert(fine, 0, 0)[:, np.newaxis]
             elif self.regulatization == "L2":
-                fine = self.alpha * self.w
+                fine = self.alpha * self.w[1:]
+                fine = np.insert(fine, 0, 0)[:, np.newaxis]
             else:
                 fine = 0
             self._gradient_descent(fine)
@@ -78,3 +82,26 @@ class LinearRegression:
         :return: weights array
         """
         return self.w
+
+
+"""
+RANDOM_STATE = 42
+n_samples = 1000
+n_outliers = 50
+
+X, y, coef = make_regression(
+    n_samples=n_samples, n_features=1,
+    n_informative=1, noise=10,
+    coef=True, random_state=RANDOM_STATE
+)
+
+# Add outlier data
+np.random.seed(RANDOM_STATE)
+X[:n_outliers] = 3 + 0.5 * np.random.normal(size=(n_outliers, 1))
+y[:n_outliers] = -3 + 10 * np.random.normal(size=n_outliers)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=RANDOM_STATE
+)
+my_regression = LinearRegression(regulatization='L2')
+my_regression.fit(X_train, y_train)
+"""

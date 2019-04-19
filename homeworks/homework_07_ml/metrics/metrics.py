@@ -5,14 +5,16 @@
 import numpy as np
 
 
-def logloss(y_true, y_pred):
+def logloss(y_true, y_pred, eps=1e-10):
     """
     logloss
     :param y_true: vector of truth (correct) class values
     :param y_hat: vector of estimated probabilities
     :return: loss
     """
-    pass
+    y_pred = np.clip(y_pred, eps, 1 - eps)
+    ll = y_true.T.dot(np.log(y_pred)) + (1 - y_pred).T.dot(np.log(1 - y_pred))
+    return -ll
 
 
 def accuracy(y_true, y_pred):

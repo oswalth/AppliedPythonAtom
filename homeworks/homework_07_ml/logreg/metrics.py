@@ -3,6 +3,7 @@
 
 
 import numpy as np
+import sklearn.metrics as metrics
 
 
 def logloss(y_true, y_pred, eps=1e-10):
@@ -85,4 +86,6 @@ def roc_auc(y_true, y_pred):
         TPR_.append(recall(y_true, tmp))
         FPR_.append(FPR(y_true, tmp))
         treshold += 0.01
-    return np.trapz(TPR_, FPR_)
+        treshold = np.round(treshold, 2)
+    roc_auc = np.abs(np.trapz(TPR_, FPR_))
+    return roc_auc

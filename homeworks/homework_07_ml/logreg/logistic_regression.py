@@ -10,12 +10,13 @@ from sklearn.datasets import make_classification
 
 class LogisticRegression:
     def __init__(
-            self,
-            lambda_coef=0.1,
-            regulatization=None,
-            alpha=0.5,
-            n_iter=10000,
-            accuracy=1e-4):
+        self,
+        lambda_coef=0.1,
+        regulatization=None,
+        alpha=0.5,
+        n_iter=10000,
+        accuracy=1e-4,
+    ):
         """
         LogReg for Binary case
         :param lambda_coef: constant coef for gradient descent step
@@ -119,6 +120,12 @@ X, y = make_classification(n_samples=1000, n_classes=2,
                            n_informative=14, random_state=43)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.33, random_state=42)
+
+X1, y1 = make_classification(n_samples=1000, n_classes=2,
+                             n_informative=14, random_state=42)
+X_train1, X_test1, y_train1, y_test1 = train_test_split(
+    X1, y1, test_size=0.33, random_state=43)
+
 model = LogisticRegression()
 model.fit(X_train, y_train)
 
@@ -132,11 +139,12 @@ lmodel.fit(X_train, y_train)
 my = roc_auc(y_train, lmodel.predict_proba(X_train)[:, 1])
 no = roc_auc_score(y_train, lmodel.predict_proba(X_train)[:, 1])
 
+my1 = roc_auc(y_train1, lmodel.predict_proba(X_train1)[:, 1])
+no1 = roc_auc_score(y_train1, lmodel.predict_proba(X_train1)[:, 1])
+
 
 not_my = log_loss(y_train, lmodel.predict(X_train))
 not_test = log_loss(y_test, lmodel.predict(X_test))
 
 not_my1 = logloss(y_train, lmodel.predict(X_train))
 not_test1 = logloss(y_test, lmodel.predict(X_test))
-
-print('ok')

@@ -45,7 +45,6 @@ class LogisticRegression:
         assert X_train.shape[0] == self.y_train.shape[0]
         self.w = np.random.randn(self.k)[:, np.newaxis]
 
-        errs = np.zeros(self.iter_lim)
         self.learned = True
         prev = np.zeros_like(self.w)
         for i in range(self.iter_lim):
@@ -59,7 +58,6 @@ class LogisticRegression:
                 fine = 0
 
             self._gradient_descent(fine)
-            errs[i] = logloss(self.y_train, self.predict(self.X_ext, fit=True))
             cur = self.w
             err = np.sum(np.abs(cur - prev))
             if i and err < self.accuracy:

@@ -38,9 +38,9 @@ def presicion(y_true, y_pred):
     """
     y_pred = np.clip(y_pred, 0.5, 2)
     diff = y_pred - y_true
-    TP = len(diff[diff == 0])
-    FP = len(diff[diff == 1])
-    return TP / (TP + FP)
+    tp = len(diff[diff == 0])
+    fp = len(diff[diff == 1])
+    return tp / (tp + fp)
 
 
 def recall(y_true, y_pred):
@@ -52,12 +52,12 @@ def recall(y_true, y_pred):
     """
     y_pred = np.clip(y_pred, 0.5, 2)
     diff = y_pred - y_true
-    TP = len(diff[diff == 0])
-    FN = len(diff[diff == -0.5])
-    return TP / (TP + FN)
+    tp = len(diff[diff == 0])
+    fn = len(diff[diff == -0.5])
+    return tp / (tp + fn)
 
 
-def FPR(y_true, y_pred):
+def fpr_calc(y_true, y_pred):
     """
     False positive ratio
     :param y_true: vector of truth (correct) class values
@@ -66,9 +66,9 @@ def FPR(y_true, y_pred):
     """
     y_pred = np.clip(y_pred, 0.5, 2)
     diff = y_pred - y_true
-    FP = len(diff[diff == 1])
-    TN = len(diff[diff == 0.5])
-    return FP / (FP + TN)
+    fp = len(diff[diff == 1])
+    tn = len(diff[diff == 0.5])
+    return fp / (fp + tn)
 
 
 def roc_auc(y_true, y_pred):
@@ -78,14 +78,14 @@ def roc_auc(y_true, y_pred):
     :param y_hat: vector of estimated probabilities
     :return: loss
     """
-    TPR_ = []
-    FPR_ = []
+    tpr_list = []
+    fpr_list = []
     treshold = 0
     for _ in range(100):
         tmp = (y_pred >= treshold).astype(int)
-        TPR_.append(recall(y_true, tmp))
-        FPR_.append(FPR(y_true, tmp))
+        tpr_list.append(recall(y_true, tmp))
+        fpr_list.append(fpr_calc(y_true, tmp))
         treshold += 0.01
         treshold = np.round(treshold, 2)
-    roc_auc = np.abs(np.trapz(TPR_, FPR_))
+    roc_auc = np.abs(np.trapz(tpr_list, fpr_list))
     return roc_auc

@@ -35,7 +35,8 @@ def r2_score(y_true, y_hat):
     :param y_hat: vector of estimated target values
     :return: loss
     """
+    mean_ = y_true.mean()
     assert y_true.shape == y_hat.shape
-    ESS = np.sum((y_hat - y_true.mean()) ** 2)
-    TSS = np.sum((y_true - y_true.mean()) ** 2)
-    return (ESS / TSS)
+    ess = np.sum((y_hat - mean_) ** 2)
+    tss = np.sum((y_true - mean_) ** 2)
+    return 1 - (ess / tss)

@@ -42,7 +42,7 @@ class LinearRegression:
         self.n, self.k = self.X_ext.shape
         self.w = (np.random.randn(self.k) / np.sqrt(self.k))[:, np.newaxis]
 
-        errs = np.zeros(self.iter_lim)
+        prev = np.zeros_like(self.w)
         for i in range(self.iter_lim):
             if self.regulatization == 'L1':
                 fine = self.alpha * np.ones(self.k - 1)
@@ -53,10 +53,11 @@ class LinearRegression:
             else:
                 fine = 0
             self._gradient_descent(fine)
-            errs[i] = mean_squared_error(self.Y, self.predict(X_train))
-            err = np.abs(errs[i] - errs[i - 1])
+            cur = self.w
+            err = np.sum(np.abs(cur - prev))
             if i and err < self.accuracy:
                 break
+            prev = np.copy(cur)
         self.coef_ = self.w[1:]
         self.intercept_ = self.w[0]
 
@@ -82,26 +83,3 @@ class LinearRegression:
         :return: weights array
         """
         return self.w
-
-
-"""
-RANDOM_STATE = 42
-n_samples = 1000
-n_outliers = 50
-
-X, y, coef = make_regression(
-    n_samples=n_samples, n_features=1,
-    n_informative=1, noise=10,
-    coef=True, random_state=RANDOM_STATE
-)
-
-# Add outlier data
-np.random.seed(RANDOM_STATE)
-X[:n_outliers] = 3 + 0.5 * np.random.normal(size=(n_outliers, 1))
-y[:n_outliers] = -3 + 10 * np.random.normal(size=n_outliers)
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.33, random_state=RANDOM_STATE
-)
-my_regression = LinearRegression(regulatization='L2')
-my_regression.fit(X_train, y_train)
-"""

@@ -42,6 +42,7 @@ class LinearRegression:
         self.n, self.k = self.X_ext.shape
         self.w = (np.random.randn(self.k) / np.sqrt(self.k))[:, np.newaxis]
 
+        self.learned = True
         prev = np.zeros_like(self.w)
         for i in range(self.iter_lim):
             if self.regulatization == 'L1':
@@ -72,6 +73,8 @@ class LinearRegression:
         :param X_test: test data for predict in
         :return: y_test: predicted values
         """
+        if not hasattr(self, 'learned'):
+            raise NameError
         X_test = (X_test - self.mean_) / self.std_
         X_test = np.hstack([np.ones((X_test.shape[0], 1)), X_test])
         y_test = np.dot(X_test, self.w)
@@ -82,4 +85,6 @@ class LinearRegression:
         Get weights from fitted linear model
         :return: weights array
         """
+        if not hasattr(self, 'learned'):
+            raise NameError
         return self.w

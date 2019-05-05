@@ -105,7 +105,7 @@ class DecisionTreeClassifier:
 
         return overall_entropy
 
-    def find_best_ssplit(self, data, potential_splits):
+    def find_best_split(self, data, potential_splits):
 
         overall_entropy = 999
         best_column, best_value = 0, 0

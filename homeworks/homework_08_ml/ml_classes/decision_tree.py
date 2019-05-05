@@ -1,14 +1,24 @@
-#!/usr/bin/env python
-# coding: utf-8
 import numpy as np
-import pandas as pd
-from sklearn.datasets import make_classification
+from sklearn.datasets import make_classification, load_iris
+from sklearn.model_selection import train_test_split
 
 
 class DecisionTreeClassifier:
     '''
     Пишем свой велосипед - дерево для классификации
     '''
+    class Node:
+        def __init__(self, condition):
+            self.condition = condition
+
+    class Leaf:
+        def __init__(self, data):
+            self.occurrences = {}
+            self.classes, self.counts = np.unique(
+                data[:, -1], return_counts=True)
+            for index in range(len(self.classes)):
+                self.occurrences[self.classes[index]] = self.counts[index]
+            self.majority = max(self.occurrences, key=self.occurrences.get)
 
     def __init__(
             self,
@@ -25,78 +35,12 @@ class DecisionTreeClassifier:
         :param min_inform_criter: один из критериев останова - процент прироста информации, который
         считаем незначительным
         '''
-        self.max_depth = max_depth
-        self.min_leaf_size = min_leaf_size
+        self.max_depth = max_depth or np.inf
+        self.min_leaf_size = min_leaf_size or 0
         self.max_leaf_number = max_leaf_number
-        self.min_inform_criter = min_inform_criter
+        self.min_inform_criter = min_inform_criter or 0
         self.tree = None
-        self.cur_depth = 0
-
-    def find_entropy(self, X, y):
-        entropy = 0
-        values = np.unique(y)
-        for value in values:
-            fraction = np.sum((y == value)) / y.shape[0]
-            entropy += -fraction * np.log2(fraction)
-        return entropy
-
-    def find_entropy_attribute(self, y, factor):
-        target_variables = np.unique(y)
-        variables = np.unique(factor)
-        entropy2 = 0
-        eps = 1e-5
-        for variable in variables:
-            entropy = 0
-            for target_variable in target_variables:
-                num = np.sum((factor == variable).astype(int) *
-                             (y == target_variable).astype(int))
-                den = np.sum(factor == variable)
-                fraction = num / (den + eps)
-                entropy += -fraction * np.log(fraction + eps)
-            fraction2 = den / y.shape[0]
-            entropy2 += -fraction2 * entropy
-        return abs(entropy2)
-
-    def get_best_split(self, X, y):
-        info_gain = []
-        for factor in X.T:
-            info_gain.append(
-                self.find_entropy(
-                    X,
-                    y) -
-                self.find_entropy_attribute(
-                    y,
-                    factor))
-        return np.argmax(info_gain)
-
-    def build_tree(self, X, y, root=False):
-        if root:
-            self.cls_counts = np.unique(y)
-
-        node = self.get_best_split(X, y)
-
-        attValue = np.unique(X[:, node])
-
-        if self.tree is None:
-            tree = dict()
-            tree[node] = dict()
-
-        for value in attValue:
-            child_X, child_y = self.get_child(X, y, node, value)
-            clValue, counts = np.unique(child_y, return_counts=True)
-
-            if len(counts) == 1:
-                tree[node][value] = clValue[0]
-            else:
-                tree[node][value] = self.build_tree(child_X, child_y)
-
-        return tree
-
-    def get_child(self, X, y, node, value):
-        tmp = np.hstack([X, y[:, np.newaxis]])
-        tmp = tmp[tmp[:, node] == value]
-        X, y = tmp[:, :-1], tmp[:, -1]
-        return X, y
+        self.leaf_number = 0
 
     def fit(self, X, y):
         '''
@@ -105,54 +49,183 @@ class DecisionTreeClassifier:
         :param y: матрица целевой переменной (num_objects, 1)
         :return: None
         '''
-        self.tree = self.build_tree(X, y, root=True)
+        self.cls_count = np.unique(y)
+        data = np.hstack([X, y[:, np.newaxis]])
+        self.tree = self.build_tree(data)
 
-    def predict(self, X, tree=None):
-        '''
-        Метод для предсказания меток на объектах X
-        :param X: матрица объектов-признаков (num_objects, num_features)
-        :return: вектор предсказаний (num_objects, 1)
-        '''
-        if not tree:
-            tree = self.tree
-        for node in tree.keys():
-            value = X[node]
-            tree = tree[node][value]
+    def get_potential_splits(self, data):
 
-            if isinstance(tree, dict):
-                prediction = self.predict(X, tree)
+        X = data[:, :-1]
+
+        potential_splits = {}
+        n_columns = X.shape[1]
+        for column_index in range(n_columns):
+            potential_splits[column_index] = []
+            values = X[:, column_index]
+            unique_values = np.unique(values)
+
+            for index in range(len(unique_values)):
+                if index != 0:
+                    curr_value = unique_values[index]
+                    prev_value = unique_values[index - 1]
+                    potential_split = (curr_value + prev_value) / 2
+
+                    potential_splits[column_index].append(potential_split)
+
+        return potential_splits
+
+    @staticmethod
+    def split_data(data, split_column, split_value):
+
+        splitted = data[:, split_column]
+
+        left = data[splitted <= split_value]
+        right = data[splitted > split_value]
+
+        return left, right
+
+    @staticmethod
+    def calculate_entropy(data):
+
+        _, counts = np.unique(data[:, -1], return_counts=True)
+        probabilities = counts / counts.sum()
+
+        entropy = np.sum(probabilities * -np.log2(probabilities))
+        return entropy
+
+    def calculate_overall_entropy(self, left, right):
+
+        data_size = len(left) + len(right)
+
+        p_left = len(left) / data_size
+        p_right = len(right) / data_size
+
+        overall_entropy = (p_left * self.calculate_entropy(left)
+                           + p_right * self.calculate_entropy(right))
+
+        return overall_entropy
+
+    def find_best_split(self, data, potential_splits):
+
+        overall_entropy = 999
+        best_column, best_value = 0, 0
+        for column_index in potential_splits:
+            for value in potential_splits[column_index]:
+                left, right = self.split_data(data, column_index, value)
+                curr_overall_entropy = self.calculate_overall_entropy(
+                    left, right)
+
+                if curr_overall_entropy < overall_entropy:
+                    overall_entropy = curr_overall_entropy
+                    best_column = column_index
+                    best_value = value
+
+                if overall_entropy < self.min_inform_criter:
+                    return best_column, best_value
+
+        return best_column, best_value
+
+    @staticmethod
+    def check_purity(data):
+
+        classes = np.unique(data[:, -1])
+
+        if len(classes) == 1:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def classify(data):
+
+        classes, cls_counts = np.unique(data[:, -1], return_counts=True)
+
+        index = cls_counts.argmax()
+        classification = classes[index]
+
+        return classification
+
+    def build_tree(self, data, depth=0):
+        if self.check_purity(data) or (
+                len(data) < self.min_leaf_size) or (
+                depth == self.max_depth):
+            return self.classify(data)
+
+        else:
+            depth += 1
+            potential_splits = self.get_potential_splits(data)
+            column, value = self.find_best_split(data, potential_splits)
+
+            left, right = self.split_data(data, column, value)
+
+            condition = "{} <= {}".format(column, value)
+            node = self.Node(condition)
+
+            if self.leaf_number >= self.max_leaf_number:
+                return node
+            node.left = self.build_tree(left, depth)
+            if not isinstance(node.left, self.Node):
+                node.left = self.Leaf(left)
+                self.leaf_number += 1
+
+            if self.leaf_number >= self.max_leaf_number:
+                return node
+            node.right = self.build_tree(right, depth)
+            if not isinstance(node.right, self.Node):
+                node.right = self.Leaf(right)
+                self.leaf_number += 1
+
+            return node
+
+    def predict(self, X, sub_tree=None, inner=False):
+        if not inner:
+            predictions = []
+            for element in X:
+                predictions.append(self.predict(element, inner=True))
+
+            return predictions
+        else:
+            tree = sub_tree or self.tree
+            column, _, value = tree.condition.split()
+
+            if X[int(column)] <= float(value):
+                answer = tree.left
             else:
-                prediction = tree
-                break
-        return prediction
+                answer = tree.right
 
-    def predict_proba(self, X):
-        '''
-        метод, возвращающий предсказания принадлежности к классу
-        :param X: матрица объектов-признаков (num_objects, num_features)
-        :return: вектор предсказанных вероятностей (num_objects, 1)
-        '''
-        for i in range(len(self.cls_counts)):
-            pass
+            if isinstance(answer, self.Leaf):
+                return answer.majority
+            elif not isinstance(answer, self.Node):
+                return answer
 
+            return self.predict(X, answer, inner=True)
 
-"""
-dataset = {'Taste':['Salty','Spicy','Spicy','Spicy','Spicy','Sweet','Salty','Sweet','Spicy','Salty'],
-       'Temperature':['Hot','Hot','Hot','Cold','Hot','Cold','Cold','Hot','Cold','Hot'],
-       'Texture':['Soft','Soft','Hard','Hard','Hard','Soft','Soft','Soft','Soft','Hard'],
-       'Eat':['No','No','Yes','No','Yes','Yes','No','Yes','Yes','Yes']}
+    def predict_proba(self, X, sub_tree=None, inner=False):
+        if not inner:
+            probabilities = []
+            for element in X:
+                probabilities.append(self.predict_proba(element, inner=True))
 
-df = pd.DataFrame(dataset,columns=['Taste','Temperature','Texture','Eat'])
+            for prob in probabilities:
+                print(prob)
 
-X = np.array(df.values.tolist())[:, :-1]
-y = np.array(df.values.tolist())[:, -1]
+        else:
+            tree = sub_tree or self.tree
+            column, _, value = tree.condition.split()
 
-tree = DecisionTreeClassifier()
-tree.fit(X, y)
-prediction = tree.predict(X[6])
-print('ok')
-"""
-X, y = make_classification(n_features=4)
-tree = DecisionTreeClassifier()
-tree.fit(X, y)
-print('ok')
+            if X[int(column)] <= float(value):
+                answer = tree.left
+            else:
+                answer = tree.right
+
+            if not isinstance(answer, self.Node):
+                probabilities = []
+                for class_ in self.cls_count:
+                    if class_ in answer.classes:
+                        probabilities.append(
+                            answer.occurrences[class_] / sum(answer.counts))
+                    else:
+                        probabilities.append(0)
+                return probabilities
+
+            return self.predict_proba(X, answer, inner=True)

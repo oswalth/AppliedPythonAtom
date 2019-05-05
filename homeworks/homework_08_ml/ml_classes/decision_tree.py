@@ -100,8 +100,8 @@ class DecisionTreeClassifier:
         p_left = len(left) / data_size
         p_right = len(right) / data_size
 
-        overall_entropy = (p_left * self.calculate_entropy(left)
-                           + p_right * self.calculate_entropy(right))
+        overall_entropy = (p_left * self.calculate_entropy(left) +
+                           p_right * self.calculate_entropy(right))
 
         return overall_entropy
 
